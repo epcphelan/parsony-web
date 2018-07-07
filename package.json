@@ -1,6 +1,6 @@
 {
   "name": "parsony-web",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Parsony web server for Parsony Rapid Development Framework",
   "main": "index.js",
   "repository": {
