@@ -1,9 +1,8 @@
-const configs = require(".././config.json");
 const superAgent = require("superagent");
 const SessionManager = require("./sessionManager");
 const SignedRequest = require('./signedRequest');
 
-const signedRequest = new SignedRequest(configs.secret);
+
 
 const SERVER_ERROR = {
   success: false,
@@ -30,6 +29,12 @@ class ApiRouter {
     this.app.use(this.sessionManager.observe());
     this.apiEndpoint = "/json-api";
     this.smsEndpoint = "/sms";
+  }
+
+  setApiCredentials(apiKey, secret){
+    this.apiKey = apiKey;
+    this.secret = secret;
+    this.signedRequest = new SignedRequest(this.secret);
   }
 
   setEndpoints({ api, sms }) {
@@ -59,12 +64,12 @@ class ApiRouter {
   bindApiEndpoint() {
     this.app.post(this.apiEndpoint, (req, res) => {
       const token = req.parsonySession;
-      const signedPkg = signedRequest.sign(req.body);
+      const signedPkg = this.signedRequest.sign(req.body);
       superAgent
         .post(this.servicesEndpoint)
         .set(HEADERS.CONTENT_TYPE, HEADERS.APP_JSON)
         .set(HEADERS.SESSION_TOKEN, token)
-        .set(HEADERS.API_KEY, configs["api_key"])
+        .set(HEADERS.API_KEY, this.apiKey)
         .send(signedPkg)
         .end(function(err, response) {
           if (err) {
