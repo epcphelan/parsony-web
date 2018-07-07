@@ -1,0 +1,25 @@
+{
+  "name": "parsony-web",
+  "version": "1.0.0",
+  "description": "Parsony web server for Parsony Rapid Development Framework",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/epcphelan/parsony-web.git"
+  },
+  "keywords": [
+    "web",
+    "server"
+  ],
+  "author": "Eric Phelan",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/epcphelan/parsony-web/issues"
+  },
+  "homepage": "https://github.com/epcphelan/parsony-web#readme",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "cors": "^2.8.4",
+    "express": "^4.16.3"
+  }
+}
