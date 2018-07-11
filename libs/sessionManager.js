@@ -7,7 +7,7 @@ class SessionManager {
   }
 
   observe() {
-    return (req, res, next) => {
+    return function observer(req, res, next){
       req.parsonySession = SessionManager.getSessionCookie(req);
       next();
     };
