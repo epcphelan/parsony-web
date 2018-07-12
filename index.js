@@ -1,30 +1,54 @@
-const ApiRouter = require("./libs/apiRouter");
 const cors = require("cors");
 const express = require("express");
 const body_parser = require("body-parser");
-const path = require('path');
+const path = require("path");
+const ApiRouter = require("./libs/apiRouter");
 
+/**
+ * @class Parsony Web Server
+ * Handles API routing, serving static files, and SPA fallback
+ */
 class ParsonyServer {
+  /**
+   * Instantiate
+   * @param configs
+   * @example
+   * {
+        "http_port": 8090,
+        "api_key": "b58445978454a0d72a4dfabad96f5f8542ebf927.key",
+        "secret":"c3af42468f78d431729ab501ee1df6d2d6e8e03d.secret",
+        "services_uri": "http://localhost:8070/json-api",
+        "endpoints":{
+          "api":"/json-api",
+          "sms":"/sms"
+        },
+        "static_files":"/dist"
+      }
+   */
   constructor(configs) {
     this.configs = configs;
     this.app = ParsonyServer.createApp();
-    this.bindMiddlewares(this.app);
-    this.addRouting(this.app);
-    this.addStaticDir(this.app);
-    this.addReactIndexFallback(this.app);
+    this._bindMiddlewares(this.app);
+    this._addRouting(this.app);
+    this._addStaticDir(this.app);
+    this._addReactIndexFallback(this.app);
   }
 
+  /**
+   * Create express app;
+   * @return {*|Function}
+   */
   static createApp() {
     return express();
   }
 
-  bindMiddlewares() {
+  _bindMiddlewares() {
     this.app.use(body_parser.json());
     this.app.use(body_parser.urlencoded({ extended: true }));
     this.app.use(cors());
   }
 
-  addRouting(app) {
+  _addRouting(app) {
     const {
       endpoints: { api, sms },
       services_uri,
@@ -32,25 +56,28 @@ class ParsonyServer {
       secret
     } = this.configs;
     const apiRouter = new ApiRouter(app, services_uri);
-    apiRouter.setApiCredentials(api_key,secret);
+    apiRouter.setApiCredentials(api_key, secret);
     apiRouter.setEndpoints({ api, sms });
     apiRouter.attachEndpoints();
   }
 
-  addStaticDir(app) {
+  _addStaticDir(app) {
     const { static_files } = this.configs;
     app.use(express.static(static_files, { extensions: ["html"] }));
   }
 
-  addReactIndexFallback(app){
+  _addReactIndexFallback(app) {
     const { static_files } = this.configs;
-    const index = path.join(static_files, 'index.html');
-    app.use((req,res)=>{
+    const index = path.join(static_files, "index.html");
+    app.use((req, res) => {
       res.status(200);
       res.sendFile(index);
-    })
+    });
   }
 
+  /**
+   * Start server listening on provided port.
+   */
   start() {
     const { http_port } = this.configs;
     this.app.listen(http_port, function(err) {

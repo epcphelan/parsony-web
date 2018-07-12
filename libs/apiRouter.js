@@ -1,8 +1,11 @@
+/**
+ *
+ * @module /libs/apiRouter.js
+ */
+
 const superAgent = require("superagent");
 const SessionManager = require("./sessionManager");
-const SignedRequest = require('./signedRequest');
-
-
+const SignedRequest = require("./signedRequest");
 
 const SERVER_ERROR = {
   success: false,
@@ -21,7 +24,16 @@ const HEADERS = {
   API_KEY: "Api-Key"
 };
 
+/**
+ * @class API Router
+ * @classdesc Routes incoming API requests to Parsony API and SMS endpoints
+ */
 class ApiRouter {
+  /**
+   * Instantiate
+   * @param {object} app - Express app
+   * @param {string} servicesEndpoint - private parsony services api endpoint
+   */
   constructor(app, servicesEndpoint) {
     this.servicesEndpoint = servicesEndpoint;
     this.app = app;
@@ -31,28 +43,50 @@ class ApiRouter {
     this.smsEndpoint = "/sms";
   }
 
-  setApiCredentials(apiKey, secret){
+  /**
+   * Set credentials on instance
+   * @param {string} apiKey
+   * @param {string} secret
+   */
+  setApiCredentials(apiKey, secret) {
     this.apiKey = apiKey;
     this.secret = secret;
     this.signedRequest = new SignedRequest(this.secret);
   }
 
+  /**
+   * Overrides default public endpoints
+   * @param {string} api
+   * @param {string} sms
+   */
   setEndpoints({ api, sms }) {
     this.apiEndpoint = api;
     this.smsEndpoint = sms;
   }
 
+  /**
+   * Bind routes to Express app
+   */
   attachEndpoints() {
-    this.bindApiEndpoint();
-    this.bindSmsEndpoint();
+    this._bindApiEndpoint();
+    this._bindSmsEndpoint();
   }
 
-  static sendError(res){
+  /**
+   * Send API error response
+   * @param {object} res - Express app response
+   */
+  static sendError(res) {
     res.writeHead(200);
     res.end(JSON.stringify(SERVER_ERROR));
   }
 
-  static sendResponse(res, apiResponse){
+  /**
+   * Send success response
+   * @param {object} res - Express response object
+   * @param {object} apiResponse - sanitizes response
+   */
+  static sendResponse(res, apiResponse) {
     let body = JSON.parse(apiResponse.text);
     SessionManager.setSessionCookie(res, body);
     SessionManager.sanitizeResponse(body);
@@ -61,7 +95,7 @@ class ApiRouter {
     res.end(JSON.stringify(body));
   }
 
-  bindApiEndpoint() {
+  _bindApiEndpoint() {
     this.app.post(this.apiEndpoint, (req, res) => {
       const token = req.parsonySession;
       const signedPkg = this.signedRequest.sign(req.body);
@@ -75,13 +109,13 @@ class ApiRouter {
           if (err) {
             ApiRouter.sendError(res);
           } else {
-            ApiRouter.sendResponse(res, response)
+            ApiRouter.sendResponse(res, response);
           }
         });
     });
   }
 
-  bindSmsEndpoint() {
+  _bindSmsEndpoint() {
     this.app.post(this.smsEndpoint, (req, res) => {
       let body = {
         method: "sms",
