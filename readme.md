@@ -25,8 +25,6 @@ const configs = {
   },
   "static_files":"/dist"
 }
-
 const parsony = new PWS(configs);
-
 parsony.start();
 ```
