@@ -117,16 +117,20 @@ class ApiRouter {
 
   _bindSmsEndpoint() {
     this.app.post(this.smsEndpoint, (req, res) => {
-      let body = {
-        method: "sms",
+      const body = {
+        method: "sms.webhook",
         args: {
           content: req.body.Body
         }
       };
+      const token = req.parsonySession;
+      const signedPkg = this.signedRequest.sign(body);
       superAgent
         .post(this.servicesEndpoint)
-        .set("Content-Type", "application/json;charset=utf-8")
-        .send(body)
+        .set(HEADERS.CONTENT_TYPE, HEADERS.APP_JSON)
+        .set(HEADERS.SESSION_TOKEN, token)
+        .set(HEADERS.API_KEY, this.apiKey)
+        .send(signedPkg)
         .end(function(err, response) {
           if (err) {
             res.writeHead(500, { "Content-Type": "text/xml" });
@@ -134,7 +138,12 @@ class ApiRouter {
           } else {
             res.writeHead(200, { "Content-Type": "text/xml" });
             const jsonResp = JSON.parse(response.text);
-            res.end(jsonResp.data.twiml);
+            const {data} = jsonResp;
+            if(data){
+              res.end(jsonResp.data.twiml);
+            } else{
+              res.end('No Data');
+            }
           }
         });
     });
