@@ -98,12 +98,13 @@ class ApiRouter {
   _bindApiEndpoint() {
     this.app.post(this.apiEndpoint, (req, res) => {
       const token = req.parsonySession;
-      const signedPkg = this.signedRequest.sign(req.body);
+      const pkg = req.body;
+      pkg.key = this.apiKey;
+      pkg.token = token;
+      const signedPkg = this.signedRequest.sign(pkg);
       superAgent
         .post(this.servicesEndpoint)
         .set(HEADERS.CONTENT_TYPE, HEADERS.APP_JSON)
-        .set(HEADERS.SESSION_TOKEN, token)
-        .set(HEADERS.API_KEY, this.apiKey)
         .send(signedPkg)
         .end(function(err, response) {
           if (err) {
