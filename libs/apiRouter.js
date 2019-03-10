@@ -118,19 +118,19 @@ class ApiRouter {
 
   _bindSmsEndpoint() {
     this.app.post(this.smsEndpoint, (req, res) => {
-      const body = {
+      const pkg = {
         method: "sms.webhook",
         args: {
           content: req.body.Body
         }
       };
       const token = req.parsonySession;
-      const signedPkg = this.signedRequest.sign(body);
+      pkg.key = this.apiKey;
+      pkg.token = token;
+      const signedPkg = this.signedRequest.sign(pkg);
       superAgent
         .post(this.servicesEndpoint)
         .set(HEADERS.CONTENT_TYPE, HEADERS.APP_JSON)
-        .set(HEADERS.SESSION_TOKEN, token)
-        .set(HEADERS.API_KEY, this.apiKey)
         .send(signedPkg)
         .end(function(err, response) {
           if (err) {
