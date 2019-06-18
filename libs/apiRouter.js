@@ -121,7 +121,9 @@ class ApiRouter {
       const pkg = {
         method: "sms.webhook",
         args: {
-          content: req.body.Body
+          content: req.body.Body,
+          from: req.body.From,
+          to: req.body.To
         }
       };
       const token = req.parsonySession;
