@@ -43,8 +43,8 @@ class ParsonyServer {
   }
 
   _bindMiddlewares() {
-    this.app.use(body_parser.json());
-    this.app.use(body_parser.urlencoded({ extended: true }));
+    this.app.use(express.json({limit: '50mb', extended: true}));
+    this.app.use(express.urlencoded({limit: '50mb', extended: true}));
     this.app.use(cors());
   }
 
