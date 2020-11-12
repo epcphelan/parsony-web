@@ -1,6 +1,6 @@
 const cors = require("cors");
 const express = require("express");
-const http = require("http");
+const https = require("https");
 const path = require("path");
 const ApiRouter = require("./libs/apiRouter");
 
@@ -73,7 +73,7 @@ class ParsonyServer {
     } = this.configs;
     if (index !== "/dist/index.html") {
       app.get("/", (req, res) => {
-        const externalReq = http.request(index, function (externalRes) {
+        const externalReq = https.request(index, function (externalRes) {
           externalRes.pipe(res);
         });
         externalReq.end();
@@ -82,8 +82,11 @@ class ParsonyServer {
   }
 
   _addIndexPipe(app) {
+    const {
+      endpoints: { index },
+    } = this.configs;
     app.use((req, res) => {
-      const externalReq = http.request(index, function (externalRes) {
+      const externalReq = https.request(index, function (externalRes) {
         externalRes.pipe(res);
       });
       externalReq.end();
