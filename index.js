@@ -1,6 +1,6 @@
 const cors = require("cors");
 const express = require("express");
-const body_parser = require("body-parser");
+const http = require("http");
 const path = require("path");
 const ApiRouter = require("./libs/apiRouter");
 
@@ -28,6 +28,7 @@ class ParsonyServer {
   constructor(configs) {
     this.configs = configs;
     this.app = ParsonyServer.createApp();
+    this._addRoot(this.app);
     this._bindMiddlewares(this.app);
     this._addRouting(this.app);
     this._addStaticDir(this.app);
@@ -43,8 +44,8 @@ class ParsonyServer {
   }
 
   _bindMiddlewares() {
-    this.app.use(express.json({limit: '50mb', extended: true}));
-    this.app.use(express.urlencoded({limit: '50mb', extended: true}));
+    this.app.use(express.json({ limit: "50mb", extended: true }));
+    this.app.use(express.urlencoded({ limit: "50mb", extended: true }));
     this.app.use(cors());
   }
 
@@ -53,7 +54,7 @@ class ParsonyServer {
       endpoints: { api, sms },
       services_uri,
       api_key,
-      secret
+      secret,
     } = this.configs;
     const apiRouter = new ApiRouter(app, services_uri);
     apiRouter.setApiCredentials(api_key, secret);
@@ -66,13 +67,44 @@ class ParsonyServer {
     app.use(express.static(static_files, { extensions: ["html"] }));
   }
 
-  _addReactIndexFallback(app) {
-    const { static_files } = this.configs;
-    const index = path.join(static_files, "index.html");
+  _addRoot(app) {
+    const {
+      endpoints: { index },
+    } = this.configs;
+    if (index !== "/dist/index.html") {
+      app.get("/", (req, res) => {
+        const externalReq = http.request(index, function (externalRes) {
+          externalRes.pipe(res);
+        });
+        externalReq.end();
+      });
+    }
+  }
+
+  _addIndexPipe(app) {
     app.use((req, res) => {
-      res.status(200);
-      res.sendFile(index);
+      const externalReq = http.request(index, function (externalRes) {
+        externalRes.pipe(res);
+      });
+      externalReq.end();
     });
+  }
+
+  _addReactIndexFallback(app) {
+    const {
+      endpoints: { index },
+    } = this.configs;
+
+    if (index !== "/dist/index.html") {
+      this._addIndexPipe(app);
+    } else {
+      const { static_files } = this.configs;
+      const indexHtml = path.join(static_files, "index.html");
+      app.use((req, res) => {
+        res.status(200);
+        res.sendFile(indexHtml);
+      });
+    }
   }
 
   /**
@@ -80,7 +112,7 @@ class ParsonyServer {
    */
   start() {
     const { http_port } = this.configs;
-    this.app.listen(http_port, function(err) {
+    this.app.listen(http_port, function (err) {
       if (!err) {
         console.log(`Web server running on: ${http_port}`);
       }
