@@ -109,7 +109,7 @@ class ApiRouter {
         .post(this.servicesEndpoint)
         .set(HEADERS.CONTENT_TYPE, HEADERS.APP_JSON)
         .send(signedPkg)
-        .end(function (err, response) {
+        .end((err, response) => {
           if (err) {
             ApiRouter.sendError(res);
           } else {
