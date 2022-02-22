@@ -18,10 +18,12 @@ const cookieParser = require("cookie-parser");
 class SessionManager {
   /**
    * @param {object} app - Express app
+   * @param {string} rootDomain - Root domain of the app
    */
-  constructor(app) {
+  constructor(app, rootDomain = null) {
     this.app = app;
     this.app.use(cookieParser());
+    this.rootDomain = rootDomain;
   }
 
   /**
@@ -82,7 +84,11 @@ class SessionManager {
   }
 
   static _makeSessionCookie(token) {
-    return `parsonySession=${token}; HttpOnly`;
+    let cookie = `parsonySession=${token}; HttpOnly`;
+    if (this.rootDomain) {
+      cookie = `${cookie}; Domain=${this.rootDomain}`;
+    }
+    return cookie;
   }
 
   static _extractSessionToken(body) {

@@ -18,6 +18,7 @@ class ParsonyServer {
         "api_key": "b58445978454a0d72a4dfabad96f5f8542ebf927.key",
         "secret":"c3af42468f78d431729ab501ee1df6d2d6e8e03d.secret",
         "services_uri": "http://localhost:8070/json-api",
+        "root_domain": "example.com", // valid domain for HTTP cookies, optional
         "endpoints":{
           "api":"/json-api",
           "sms":"/sms"
@@ -55,8 +56,9 @@ class ParsonyServer {
       services_uri,
       api_key,
       secret,
+      root_domain,
     } = this.configs;
-    const apiRouter = new ApiRouter(app, services_uri);
+    const apiRouter = new ApiRouter(app, services_uri, root_domain);
     apiRouter.setApiCredentials(api_key, secret);
     apiRouter.setEndpoints({ api, sms });
     apiRouter.attachEndpoints();
