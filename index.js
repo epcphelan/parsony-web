@@ -52,15 +52,16 @@ class ParsonyServer {
 
   _addRouting(app) {
     const {
-      endpoints: { api, sms },
+      endpoints: { api, sms, proxy },
       services_uri,
       api_key,
       secret,
       root_domain,
+      proxy_uri,
     } = this.configs;
-    const apiRouter = new ApiRouter(app, services_uri, root_domain);
+    const apiRouter = new ApiRouter(app, services_uri, proxy_uri, root_domain);
     apiRouter.setApiCredentials(api_key, secret);
-    apiRouter.setEndpoints({ api, sms });
+    apiRouter.setEndpoints({ api, sms, proxy });
     apiRouter.attachEndpoints();
   }
 

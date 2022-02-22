@@ -22,6 +22,7 @@ const HEADERS = {
   APP_JSON: "application/json;charset=utf-8",
   SESSION_TOKEN: "Session-Token",
   API_KEY: "Api-Key",
+  COOKIE: "Cookie",
 };
 
 /**
@@ -35,13 +36,15 @@ class ApiRouter {
    * @param {string} servicesEndpoint - private parsony services api endpoint
    * @param {string} rootDomain - Root domain of the app
    */
-  constructor(app, servicesEndpoint, rootDomain = null) {
+  constructor(app, servicesEndpoint, servicesProxyEndpoint, rootDomain = null) {
     this.servicesEndpoint = servicesEndpoint;
+    this.servicesProxyEndpoint = servicesProxyEndpoint;
     this.app = app;
     this.sessionManager = new SessionManager(app);
     this.app.use(this.sessionManager.observe());
     this.apiEndpoint = "/json-api";
     this.smsEndpoint = "/sms";
+    this.proxyEndpoint = "/proxy";
     this.rootDomain = rootDomain;
   }
 
@@ -61,9 +64,10 @@ class ApiRouter {
    * @param {string} api
    * @param {string} sms
    */
-  setEndpoints({ api, sms }) {
+  setEndpoints({ api, sms, proxy }) {
     this.apiEndpoint = api;
     this.smsEndpoint = sms;
+    this.proxyEndpoint = proxy;
   }
 
   /**
@@ -72,6 +76,7 @@ class ApiRouter {
   attachEndpoints() {
     this._bindApiEndpoint();
     this._bindSmsEndpoint();
+    this._bindProxyEndpoint();
   }
 
   /**
@@ -150,6 +155,29 @@ class ApiRouter {
             } else {
               res.end("No Data");
             }
+          }
+        });
+    });
+  }
+
+  _bindProxyEndpoint() {
+    this.app.post(`${this.proxyEndpoint}*`, (req, res) => {
+      const { headers, body, url } = req;
+      const sessionToken = req.parsonySession;
+      const destination = url.replace(`${this.proxyEndpoint}/`, "");
+      const forwardUrl = `${this.servicesProxyEndpoint}${destination}`;
+      superAgent
+        .post(forwardUrl)
+        .set(HEADERS.CONTENT_TYPE, headers["content-type"])
+        .set(HEADERS.COOKIE, `parsonySession=${sessionToken}`)
+        .send(body)
+        .end(function (err, response) {
+          if (err) {
+            res.writeHead(500, { "Content-Type": "text/xml" });
+            res.end(response.text);
+          } else {
+            res.writeHead(200, { "Content-Type": "text/xml" });
+            res.end(response.text);
           }
         });
     });
