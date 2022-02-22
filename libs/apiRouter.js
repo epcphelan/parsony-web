@@ -38,10 +38,11 @@ class ApiRouter {
   constructor(app, servicesEndpoint, rootDomain = null) {
     this.servicesEndpoint = servicesEndpoint;
     this.app = app;
-    this.sessionManager = new SessionManager(app, rootDomain);
+    this.sessionManager = new SessionManager(app);
     this.app.use(this.sessionManager.observe());
     this.apiEndpoint = "/json-api";
     this.smsEndpoint = "/sms";
+    this.rootDomain = rootDomain;
   }
 
   /**
@@ -86,10 +87,11 @@ class ApiRouter {
    * Send success response
    * @param {object} res - Express response object
    * @param {object} apiResponse - sanitizes response
+   * @param {string} rootDomain - Root domain of the app
    */
-  static sendResponse(res, apiResponse) {
+  static sendResponse(res, apiResponse, rootDomain = null) {
     let body = JSON.parse(apiResponse.text);
-    SessionManager.setSessionCookie(res, body);
+    SessionManager.setSessionCookie(res, body, rootDomain);
     SessionManager.sanitizeResponse(body);
 
     res.writeHead(200);
@@ -111,7 +113,7 @@ class ApiRouter {
           if (err) {
             ApiRouter.sendError(res);
           } else {
-            ApiRouter.sendResponse(res, response);
+            ApiRouter.sendResponse(res, response, this.rootDomain);
           }
         });
     });
