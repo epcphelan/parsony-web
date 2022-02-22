@@ -33,11 +33,12 @@ class ApiRouter {
    * Instantiate
    * @param {object} app - Express app
    * @param {string} servicesEndpoint - private parsony services api endpoint
+   * @param {string} rootDomain - Root domain of the app
    */
-  constructor(app, servicesEndpoint) {
+  constructor(app, servicesEndpoint, rootDomain = null) {
     this.servicesEndpoint = servicesEndpoint;
     this.app = app;
-    this.sessionManager = new SessionManager(app);
+    this.sessionManager = new SessionManager(app, rootDomain);
     this.app.use(this.sessionManager.observe());
     this.apiEndpoint = "/json-api";
     this.smsEndpoint = "/sms";
