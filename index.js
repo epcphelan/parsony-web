@@ -1,5 +1,6 @@
 const cors = require("cors");
 const express = require("express");
+const compression = require('compression');
 const http = require("http");
 const path = require("path");
 const ApiRouter = require("./libs/apiRouter");
@@ -47,6 +48,7 @@ class ParsonyServer {
   _bindMiddlewares() {
     this.app.use(express.json({ limit: "50mb", extended: true }));
     this.app.use(express.urlencoded({ limit: "50mb", extended: true }));
+    this.app.use(compression());
     this.app.use(cors());
   }
 
