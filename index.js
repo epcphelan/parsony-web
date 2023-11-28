@@ -33,6 +33,7 @@ class ParsonyServer {
     this._bindMiddlewares(this.app);
     this._addRouting(this.app);
     this._addStaticDir(this.app);
+    this._addStaticPipes(this.app);
     this._addReactIndexFallback(this.app);
   }
 
@@ -68,6 +69,19 @@ class ParsonyServer {
   _addStaticDir(app) {
     const { static_files } = this.configs;
     app.use(express.static(static_files, { extensions: ["html"] }));
+  }
+
+  _addStaticPipes(app) {
+    const { static_pipes = [] } = this.configs;
+    static_pipes.forEach((pairing) => {
+      const { local, remote } = pairing;
+      app.get(local, (req, res) => {
+        const externalReq = http.request(remote, function (externalRes) {
+          externalRes.pipe(res);
+        });
+        externalReq.end();
+      });
+    });
   }
 
   _addRoot(app) {
