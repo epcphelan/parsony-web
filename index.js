@@ -74,8 +74,12 @@ class ParsonyServer {
   _addStaticPipes(app) {
     const { static_pipes = [] } = this.configs;
     static_pipes.forEach((pairing) => {
-      const { local, remote } = pairing;
+      const { local, remote, headers = [] } = pairing;
       app.get(local, (req, res) => {
+        headers.forEach((header) => {
+          const { key, value } = header;
+          res.setHeader(key, value);
+        });
         const externalReq = http.request(remote, function (externalRes) {
           externalRes.pipe(res);
         });
